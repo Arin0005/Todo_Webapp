@@ -1,6 +1,8 @@
 import streamlit as st
-import pandas as pd 
-from db_fun import 
+import pandas as pd  
+from db_fun import *
+
+from db_fun import add_data, view_all_data, create_table, edit_task_data, delete_data, view_all_task_names
 import streamlit.components.v1 as stc
 
 
@@ -56,7 +58,7 @@ def main():
 
 		list_of_tasks = [i[0] for i in view_all_task_names()]
 		selected_task = st.selectbox("Task",list_of_tasks)
-		task_result = get_task(selected_task)
+		task_result = new_task(selected_task)
 		# st.write(task_result)
 
 		if task_result:
