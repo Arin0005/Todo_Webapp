@@ -1,14 +1,13 @@
 import streamlit as st
 import pandas as pd  
-from db_fun import *
+from db_funs import *
 
-from db_fun import add_data, view_all_data, create_table, edit_task_data, delete_data, view_all_task_names
+from db_funs import add_data, view_all_data, create_table, edit_task_data, delete_data, view_all_task_names
 import streamlit.components.v1 as stc
 
 
 
 def main():
-	#stc.html(HTML_BANNER)
 
 
 	menu = ["Create","Read","Update","Delete","About"]
@@ -52,14 +51,14 @@ def main():
 		st.subheader("Edit Items")
 		with st.expander("Current Data"):
 			result = view_all_data()
-			# st.write(result)
+			#st.write(result)
 			clean_df = pd.DataFrame(result,columns=["Task","Status","Date"])
 			st.dataframe(clean_df)
 
 		list_of_tasks = [i[0] for i in view_all_task_names()]
 		selected_task = st.selectbox("Task",list_of_tasks)
-		task_result = new_task(selected_task)
-		# st.write(task_result)
+		task_result = get_task(selected_task)
+		#st.write(task_result)
 
 		if task_result:
 			task = task_result[0][0]
