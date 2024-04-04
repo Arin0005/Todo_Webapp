@@ -6,38 +6,51 @@ import re
 from db_funs import add_data, view_all_data, create_table, edit_task_data, delete_data, view_all_task_names
 
 
+# Adds header and applies colour to the app
+def Header():
+	st.header(" ToDo List Web App ")
+	### Add the colour to this part it would applay it to whole web app ###
+
+
+
 # main code 
 def main():
 	menu = ["Create","Read","Update","Delete","About"]
 	choice = st.sidebar.selectbox("Menu",menu)
-	create_table()   # creates a database and if already exists then it is skipped 
+	create_table()   # creates a database, if it already does not exists
 	if choice == "Create":
-		Create_Task()
+		Header()
+		Create_task()
 			
 	elif choice == "Read":
+		Header()
 		Read_data()
 
 	elif choice == "Update":
+		Header()
 		Update_task()
 
 	elif choice == "Delete":
+		Header()
 		Delete_task()
 
 	else:
-		st.subheader("About ToDo List App")
+		Header()
+		st.subheader(" Category 2 : ")
 		st.info("Built with Streamlit, Pandas, SQLite3 and Regex")
 		st.info("Team Members: Arin Thamke , Janvi Panchal, Yashas Mayekar")
 
 
+
 # creates table and adds the task 
-def Create_Task(): 
+def Create_task(): 
 	st.subheader("Add Item")
 	col1,col2 = st.columns(2)
 
 	with col1:
 			st.info("These special characters are not allowed: < > : ; ~ ` ^ _ {} + =")
-			corrected_text = st.text_area("Task To Do")
-			task = re.sub('[;:><`+=~^_{}]', "", corrected_text)     # Removes the special characters
+			corrected_task = st.text_area("Task To Do")
+			task = re.sub('[;:><`+=~^_{}]', "", corrected_task)     # Removes the special characters
 
 	with col2:
 			task_status = st.selectbox("Status",["ToDo","Done"])
@@ -47,6 +60,7 @@ def Create_Task():
 		add_data(task,task_status,task_due_date)     # insetrs the data into table
 		st.success("Added ::{} ::To Task".format(task))
 		
+
 
 # allows the accesebility to read data
 def Read_data():  
@@ -60,6 +74,7 @@ def Read_data():
 		task_df = clean_df['Status'].value_counts().to_frame()
 		task_df = task_df.reset_index()
 		st.dataframe(task_df)		
+
 
 
 # allows to update/edit data 
@@ -83,7 +98,9 @@ def Update_task():
 		col1,col2 = st.columns(2)
 			
 		with col1:
-			new_task = st.text_area("Task To Do",task)
+			st.info("These special characters are not allowed: < > : ; ~ ` ^ _ {} + =")
+			new_corrected_task = st.text_area("Task To Do",task)
+			new_task = re.sub('[;:><`+=~^_{}]', "",new_corrected_task)    # Does not allow the special characters in the updated task
 
 		with col2:
 			new_task_status = st.selectbox(task_status,["ToDo","Done"])
