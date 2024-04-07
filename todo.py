@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd  
-from db_funs import *
+
 import re 
 
 from db_funs import add_data, view_all_data, create_table, edit_task_data, delete_data, view_all_task_names
@@ -9,8 +9,6 @@ from db_funs import add_data, view_all_data, create_table, edit_task_data, delet
 # Adds header and applies colour to the app
 def Header():
 	st.header(" ToDo List Web App ")
-	### Add the colour to this part it would applay it to whole web app ###
-
 
 
 # main code 
