@@ -5,6 +5,9 @@ from animate import css
 from db_funs import add_data, get_task, view_all_data, create_table, edit_task_data, delete_data, view_all_task_names
 
 
+# library for data vigz
+import matplotlib.pyplot as plt
+
 # Adds header and applies colour to the app
 def Header():
 	st.markdown('<h1 class="fade-in glow"> ToDo List Web App </h1>', unsafe_allow_html=True)
@@ -13,7 +16,7 @@ def Header():
 # main code 
 def main():
 	css()
-	menu = ["Create","Read","Update","Delete","See Tasks","About"]
+	menu = ["Create","Read","Update","Delete","See Task Status","About"]
 	choice = st.sidebar.selectbox("Menu",menu)
 	create_table()   # creates a database, if it already does not exists
 	if choice == "Create":
@@ -32,7 +35,7 @@ def main():
 		Header()
 		Delete_task()
 
-	elif choice == "See Tasks":
+	elif choice == "See Task Status":
 		Header()
 		show_all_tasks()	
 
@@ -60,7 +63,7 @@ def Create_task():
 
 	if st.button("Add Task"):
 		add_data(task,task_status,task_due_date)     # insetrs the data into table
-		st.success(f'<div class="fade-in">Added ::{task} ::To Task</div>', unsafe_allow_html=True)
+		st.success(f'<div class="fade-in">Added ::{task} ::To Task</div>')
 		
 
 
@@ -68,22 +71,22 @@ def Create_task():
 def Read_data():  
 	with st.expander("View All", expanded=True):
 		result = view_all_data()
-		clean_df = pd.DataFrame(result,columns=["Task","Status","Date"])     #data is structured in Pandas 
+		clean_df = pd.DataFrame(result,columns=["Task","Status","Date"])     #data is structured in Pandas
 		st.markdown('<div class="slide-in">', unsafe_allow_html=True)
-		st.dataframe(clean_df)     # merges the database with streamlit 
+		st.dataframe(clean_df)     # merges the database with streamlit
 		st.markdown('</div>', unsafe_allow_html=True)
 
 	with st.expander("Task Status"):
 		task_df = clean_df['Status'].value_counts().to_frame()
 		task_df = task_df.reset_index()
-		st.dataframe(task_df)		
+		st.dataframe(task_df)
 
 
 
 # allows to update/edit data 
 def Update_task():
-	st.subheader("Edit Items", expanded=True)
-	with st.expander("Current Data", expanded=True): # Shows the previously stored data without any changes
+	st.subheader("Edit Items")
+	with st.expander("Current Data"): # Shows the previously stored data without any changes
 		result = view_all_data()
 		clean_df = pd.DataFrame(result,columns=["Task","Status","Date"])
 		st.dataframe(clean_df)
@@ -124,7 +127,7 @@ def Update_task():
 
 def Delete_task():
 	st.subheader("Delete")
-	with st.expander("View Data", expanded=True): # Shows the present data 
+	with st.expander("View Data" ): # Shows the present data
 		result = view_all_data()
 		clean_df = pd.DataFrame(result,columns=["Task","Status","Date"])
 		st.dataframe(clean_df)
@@ -137,24 +140,34 @@ def Delete_task():
 		st.warning("Deleted: '{}'".format(delete_by_task_name))
     
 	# Shows the table after deletion of task
-	with st.expander("Updated Data", expanded=True):
+	with st.expander("Updated Data" ):
 		result = view_all_data()
 		clean_df = pd.DataFrame(result,columns=["Task","Status","Date"])
 		st.dataframe(clean_df)
 
 
 
+
+
 def show_all_tasks():
-	# Fetch all task data from the database
-	result = view_all_data()
-	if result:
-		# Display task data as a structured DataFrame
-		clean_df = pd.DataFrame(result, columns=["Task", "Status", "Date"])
-		st.markdown('<div class="fade-in">', unsafe_allow_html=True)
-		st.dataframe(clean_df)
-		st.markdown('</div>', unsafe_allow_html=True)
-	else:
-		st.write("No tasks available.")
+    # Fetch all task data from the database
+    with st.expander("View All"):
+        result = view_all_data()
+        clean_df = pd.DataFrame(result, columns=["Task", "Status", "Date"])
+        st.dataframe(clean_df)
+
+    with st.expander("Task Status"):
+        task_df = clean_df['Status'].value_counts().to_frame(name='count').reset_index() # Count repetations of each status
+        task_df.columns = ['Status Type', 'count']  # rename the columns
+        st.dataframe(task_df)
+
+        # Create a pie chart using matplotlib
+        fig, ax = plt.subplots()
+        ax.pie(task_df['count'], labels=task_df['Status Type'], autopct='%1.1f%%', startangle=90)
+        ax.axis('equal')  # Equal ratio ensures the pie chart is circular.
+
+        # Display the chart in Streamlit
+        st.pyplot(fig)
 
 
 
