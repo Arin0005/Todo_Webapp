@@ -1,70 +1,71 @@
 import streamlit as st
-import pandas as pd  
-import re 
-from animate import css
+import pandas as pd
+import re
+import datetime  # To handle dates
+
 from db_funs import add_data, get_task, view_all_data, create_table, edit_task_data, delete_data, view_all_task_names
 
-
-# library for data vigz
+# library for data viz
 import matplotlib.pyplot as plt
+
 
 # Adds header and applies colour to the app
 def Header():
-	st.markdown('<h1 class="fade-in glow"> ToDo List Web App </h1>', unsafe_allow_html=True)
+	st.header('TaskFlow Web App')
 
 
-# main code 
+# Main function
 def main():
-	css()
-	menu = ["Create","Read","Update","Delete","See Task Status","About"]
-	choice = st.sidebar.selectbox("Menu",menu)
-	create_table()   # creates a database, if it already does not exists
+	menu = ["Create", "Read", "Update", "Delete", "See Task Status", "Reminders", "About"]
+	choice = st.sidebar.selectbox("Menu", menu)
+	create_table()  # Ensure table exists before any operation
+
+	# Menu options and corresponding functions
 	if choice == "Create":
 		Header()
 		Create_task()
-			
 	elif choice == "Read":
 		Header()
 		Read_data()
-
 	elif choice == "Update":
 		Header()
 		Update_task()
-
 	elif choice == "Delete":
 		Header()
 		Delete_task()
-
 	elif choice == "See Task Status":
 		Header()
-		show_all_tasks()	
-
+		show_all_tasks()
+	elif choice == "Reminders":  # NEW - Handle Reminders
+		Header()
+		show_reminders()  # Display reminder logic here
 	else:
 		Header()
-		st.subheader(" Category 2 : ")
-		st.info("Built with Streamlit, Pandas, SQLite3 and Regex")
-		st.info("Team Members: Arin Thamke , Janvi Panchal, Yashas Mayekar")
+		st.subheader("About Us")
+		st.info("Built with Streamlit, Pandas, SQLite3, and Regex")
+		st.info("Team Members: Soham Kawadkar, Yatin Mhatre, Pranay Devtale")
 
 
 
-# creates table and adds the task 
-def Create_task(): 
+# Create task
+def Create_task():
 	st.subheader("Add Item")
-	col1,col2 = st.columns(2)
+	col1, col2 = st.columns(2)
 
 	with col1:
-			st.info("These special characters are not allowed: < > : ; ~ ` ^ _ {} + =")
-			corrected_task = st.text_area('<div class="bounce-in">Task To Do</div>', key="task_input")
-			task = re.sub('[;:><`+=~^_{}]', "", corrected_task)     # Removes the special characters
+		st.info("Special characters are not allowed: < > : ; ~ ` ^ _ {} + =")
+		corrected_task = st.text_area('Task To Do', key="task_input")
+		task = re.sub('[;:><`+=~^_{}]', "", corrected_task)  # Removes special characters
 
 	with col2:
-			task_status = st.selectbox('<div class="zoom-in">Status</div>', ["ToDo", "Done"], key="status_select")
-			task_due_date = st.date_input("Due Date")
+		task_status = st.selectbox('Status', ["ToDo", "Done"], key="status_select")
+		task_due_date = st.date_input("Due Date")  # Task due date
 
 	if st.button("Add Task"):
-		add_data(task,task_status,task_due_date)     # insetrs the data into table
-		st.success(f'<div class="fade-in">Added ::{task} ::To Task</div>')
+		add_data(task, task_status, task_due_date)  # Insert the data into the table
+		st.success(f"Added :: {task} :: To Task")
 		
+
 
 
 # allows the accesebility to read data
@@ -80,6 +81,7 @@ def Read_data():
 		task_df = clean_df['Status'].value_counts().to_frame()
 		task_df = task_df.reset_index()
 		st.dataframe(task_df)
+
 
 
 
@@ -125,6 +127,7 @@ def Update_task():
 
 
 
+
 def Delete_task():
 	st.subheader("Delete")
 	with st.expander("View Data" ): # Shows the present data
@@ -148,7 +151,6 @@ def Delete_task():
 
 
 
-
 def show_all_tasks():
     # Fetch all task data from the database
     with st.expander("View All"):
@@ -168,6 +170,47 @@ def show_all_tasks():
 
         # Display the chart in Streamlit
         st.pyplot(fig)
+
+
+
+
+# Function to handle reminders
+def show_reminders():
+	st.subheader("Reminders")
+
+	# Fetch all task data from the database
+	result = view_all_data()  # Make sure your db_funs has this function returning tasks with due dates
+	clean_df = pd.DataFrame(result, columns=["Task", "Status", "Date"])
+
+	# Ensure 'Date' is in a proper datetime format for filtering
+	clean_df['Date'] = pd.to_datetime(clean_df['Date'], errors='coerce')
+
+	# Get today's date
+	today = datetime.date.today()
+
+	# Filter for tasks due today
+	due_today = clean_df[clean_df['Date'] == pd.Timestamp(today)]
+	if not due_today.empty:
+		st.warning("Tasks Due Today:")
+		st.table(due_today)
+
+	# Filter for overdue tasks
+	overdue = clean_df[clean_df['Date'] < pd.Timestamp(today)]
+	if not overdue.empty:
+		st.error("Overdue Tasks:")
+		st.table(overdue)
+
+	# Filter for tasks due in the next 3 days
+	next_three_days = clean_df[(clean_df['Date'] > pd.Timestamp(today)) &
+							   (clean_df['Date'] <= pd.Timestamp(today + datetime.timedelta(days=3)))]
+	if not next_three_days.empty:
+		st.info("Tasks Due in the Next 3 Days:")
+		st.table(next_three_days)
+
+	# Show a success message if no tasks are due soon or overdue
+	if due_today.empty and overdue.empty and next_three_days.empty:
+		st.success("No upcoming deadlines or overdue tasks!")
+
 
 
 
